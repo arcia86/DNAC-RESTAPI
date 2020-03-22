@@ -1,0 +1,53 @@
+#!/usr/bin/env python
+
+import requests
+import json
+import urllib3
+from tabulate import *
+
+requests.packages.urllib3.disable_warnings()
+
+url = "https://10.97.2.232:443/api/system/v1/auth/token"
+
+payload  = {}
+headers = {
+  'Authorization': 'Basic YWRtaW46R3JhcGV2aW5lMQ==',
+  'Authorization': 'Basic YWRtaW46QzFzY28xMjM0NQ=='
+}
+
+response = requests.request("POST", url, headers=headers, data = payload, verify=False)
+
+print(response.text.encode('utf8'))
+
+response_json = response.json()["Token"]
+
+url = "https://10.97.2.232:443/api/v1/network-device/1/14"
+headers = {"X-Auth-Token": response_json}
+payload = {}
+
+response = requests.request("GET", url, headers=headers, data = payload, verify=False)
+
+response_string = response.text.encode('utf8') 
+
+json_object = json.loads(response_string)
+
+print(json.dumps(json_object, indent=4, sort_keys=True))
+
+list = json_object["response"]
+
+length = len(list)
+
+print(" La cantidad de dispositivos en el DNAC son : " + str(length) + " Devices.. \n")
+
+device_list = []
+
+i=0
+
+for item in list:
+    i+=1
+    device_list.append([i,item["hostname"],item["managementIpAddress"],item["role"],item["platformId"]])
+
+print (tabulate(device_list, headers=['hostname','ip','role','platform'],tablefmt="rst"))
+
+
+
